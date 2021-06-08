@@ -1,0 +1,5 @@
+php==7.3.28
+bit==0.7.2
+web3==5.19.0
+python-dotenv==0.17.1
+eth-account==0.5.4

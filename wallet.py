@@ -8,18 +8,15 @@ from dotenv import load_dotenv
 # Load and set environment variables
 load_dotenv()
 mnemonic = os.getenv("MNEMONIC")
-# mnemonic = "culture toddler flock leisure judge fuel dwarf cram high phone fire east"
 
 # Import constants.py and necessary functions from bit and web3
 from constants import *
 from bit import PrivateKeyTestnet
-from bit import wif_to_key
 from bit.network import NetworkAPI
 from web3 import Web3
 from web3.auto.gethdev import w3
 from web3.middleware import geth_poa_middleware
 from eth_account import Account
-from getpass import getpass
 
 w3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545"))
 w3.middleware_onion.inject(geth_poa_middleware, layer=0)
@@ -62,26 +59,34 @@ def create_tx(coin, account, to, amount):
             "gas": gasEstimate,
             "gasPrice": w3.eth.gasPrice,
             "nonce": w3.eth.getTransactionCount(account.address),
-            "chaidID": w3.eth.chain_id
+            # "chaidID": w3.eth.chain_id
+            # I had to comment this out, otherwise I was getting an error saying Transaction must not include unrecognized fields: {'chaidID'}
         }
 
     if coin == BTCTEST:
-        return PrivateKeyTestnet.prepare_transaction(account.address, [(to, amount, coin)])
+        return PrivateKeyTestnet.prepare_transaction(account.address, [(to.address, amount, BTC)])
 
 # # Create a function called `send_tx` that calls `create_tx`, signs and sends the transaction.
 def send_tx(coin, account, to, amount):
     if coin == ETH:
         tx = create_tx(coin, account, to, amount)
         signed = account.sign_transaction(tx)
+        print(signed)
         return w3.eth.sendRawTransaction(signed.rawTransaction)
 
     if coin == BTCTEST:
         tx = create_tx(coin, account, to, amount)
-        signed = account.send(tx)
+        signed = account.sign_transaction(tx)
+        print(signed)
         return NetworkAPI.broadcast_tx_testnet(signed)
 
-print(priv_key_to_account(ETH, coins[ETH][0]['privkey']))
-sender_account = priv_key_to_account(BTCTEST, coins[BTCTEST][0]['privkey'])
-receiver_account =  coins[BTCTEST][1]['address']
 
-send_tx('btc-test', sender_account, receiver_account, .001)
+# Set ETH variables and call send_tx function
+eth_sender_account = priv_key_to_account(ETH, coins[ETH][1]['privkey'])
+eth_reciever_account = coins[ETH][0]['address']
+send_tx(ETH, eth_sender_account, eth_reciever_account, 5)
+
+# Set BTCTEST variables and call send_tx function
+btc_sender_account = priv_key_to_account(BTCTEST, coins[BTCTEST][0]['privkey'])
+btc_receiver_account = priv_key_to_account(BTCTEST, coins[BTCTEST][1]['privkey'])
+send_tx(BTCTEST, btc_sender_account, btc_receiver_account, .0001)
