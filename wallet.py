@@ -39,7 +39,6 @@ pprint(coins)
 
 # Create a function called `priv_key_to_account` that converts privkey strings to account objects.
 def priv_key_to_account(coin, priv_key):
-    # Why am I passing in priv_key if I can call it from the coins dictionary?
     if coin == ETH:
         return Account.privateKeyToAccount(priv_key)
     if coin == BTCTEST:
@@ -50,10 +49,10 @@ def create_tx(coin, account, to, amount):
     if coin == ETH:
         value = w3.toWei(amount,"ether")
         gasEstimate = w3.eth.estimateGas(
-        {"from": account.address, "to": to, "value": value}
+        {"from": account.address, "to": to.address, "value": value}
         )
         return {
-            "to": to,
+            "to": to.address,
             "from": account.address,
             "value": value,
             "gas": gasEstimate,
@@ -80,10 +79,9 @@ def send_tx(coin, account, to, amount):
         print(signed)
         return NetworkAPI.broadcast_tx_testnet(signed)
 
-
 # Set ETH variables and call send_tx function
-eth_sender_account = priv_key_to_account(ETH, coins[ETH][1]['privkey'])
-eth_reciever_account = coins[ETH][0]['address']
+eth_sender_account = priv_key_to_account(ETH, coins[ETH][0]['privkey'])
+eth_reciever_account = priv_key_to_account(ETH, coins[ETH][1]['privkey'])
 send_tx(ETH, eth_sender_account, eth_reciever_account, 5)
 
 # Set BTCTEST variables and call send_tx function
